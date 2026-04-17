@@ -79,8 +79,40 @@ export default function App() {
   const handleAddPhoto = useCallback((newPhoto) => {
     setPhotos((prev) => [newPhoto, ...prev]);
     totalRef.current = filteredPhotos.length + 1;
-    // New card image not yet loaded
   }, [filteredPhotos.length]);
+
+  const handleDeletePhoto = useCallback(async (id) => {
+    setPhotos((prev) => prev.filter((p) => p.id !== id));
+    try {
+      await fetch('/api/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+    } catch (e) {
+      console.error("Delete failed:", e);
+    }
+  }, []);
+
+  const handleReorderPhotos = useCallback((newOrder) => {
+    if (activeTag === "All") setPhotos(newOrder);
+  }, [activeTag]);
+
+  const latestPhotosRef = useRef(photos);
+  useEffect(() => { latestPhotosRef.current = photos; }, [photos]);
+
+  const handleSaveOrder = useCallback(async () => {
+    if (activeTag !== "All") return;
+    try {
+      await fetch('/api/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newOrder: latestPhotosRef.current })
+      });
+    } catch (e) {
+      console.error("Reorder save failed:", e);
+    }
+  }, [activeTag]);
 
   return (
     <div className="min-h-screen" style={{ fontFamily: "var(--font-body)" }}>
@@ -127,6 +159,10 @@ export default function App() {
             onToggleLike={toggleLike}
             onLikeEvent={handleLikeEvent}
             onImageLoad={handleImageLoad}
+            onDeleteEvent={handleDeletePhoto}
+            onReorderEvent={handleReorderPhotos}
+            onSaveOrderEvent={handleSaveOrder}
+            isDraggable={activeTag === "All"}
           />
         </div>
       </main>

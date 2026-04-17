@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, Reorder } from "framer-motion";
 import PhotoCard from "./PhotoCard";
 
 const containerVariants = {
@@ -10,7 +10,7 @@ const containerVariants = {
   },
 };
 
-export default function GalleryGrid({ photos, isLiked, onToggleLike, onLikeEvent, onImageLoad }) {
+export default function GalleryGrid({ photos, isLiked, onToggleLike, onLikeEvent, onImageLoad, onDeleteEvent, onReorderEvent, onSaveOrderEvent, isDraggable }) {
   if (photos.length === 0) {
     return (
       <motion.div
@@ -29,27 +29,61 @@ export default function GalleryGrid({ photos, isLiked, onToggleLike, onLikeEvent
     );
   }
 
+  if (!isDraggable) {
+    return (
+      <motion.div
+        id="gallery-grid"
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 px-4 sm:px-6 w-full max-w-sm md:max-w-none mx-auto box-border"
+      >
+        <AnimatePresence mode="popLayout">
+          {photos.map((photo, index) => (
+            <PhotoCard
+              key={photo.id}
+              photo={photo}
+              index={index}
+              isLiked={isLiked(photo.id)}
+              onToggleLike={onToggleLike}
+              onLikeEvent={onLikeEvent}
+              onImageLoad={onImageLoad}
+              onDeleteEvent={onDeleteEvent}
+            />
+          ))}
+        </AnimatePresence>
+      </motion.div>
+    );
+  }
+
   return (
-    <motion.div
+    <Reorder.Group
       id="gallery-grid"
-      variants={containerVariants}
-      initial="hidden"
-      animate="show"
+      axis="y"
+      values={photos}
+      onReorder={onReorderEvent}
       className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 px-4 sm:px-6 w-full max-w-sm md:max-w-none mx-auto box-border"
     >
       <AnimatePresence mode="popLayout">
         {photos.map((photo, index) => (
-          <PhotoCard
-            key={photo.id}
-            photo={photo}
-            index={index}
-            isLiked={isLiked(photo.id)}
-            onToggleLike={onToggleLike}
-            onLikeEvent={onLikeEvent}
-            onImageLoad={onImageLoad}
-          />
+          <Reorder.Item 
+            key={photo.id} 
+            value={photo} 
+            onDragEnd={onSaveOrderEvent}
+            className="w-full box-border relative flex flex-col"
+          >
+            <PhotoCard
+              photo={photo}
+              index={index}
+              isLiked={isLiked(photo.id)}
+              onToggleLike={onToggleLike}
+              onLikeEvent={onLikeEvent}
+              onImageLoad={onImageLoad}
+              onDeleteEvent={onDeleteEvent}
+            />
+          </Reorder.Item>
         ))}
       </AnimatePresence>
-    </motion.div>
+    </Reorder.Group>
   );
 }

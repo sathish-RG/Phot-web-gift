@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Share2, Quote, Lock, Unlock, X } from "lucide-react";
+import { Heart, Share2, Quote, Lock, Unlock, X, Trash2 } from "lucide-react";
 import confetti from "canvas-confetti";
 import SkeletonCard from "./SkeletonCard";
 import useInView from "../hooks/useInView";
@@ -52,7 +52,7 @@ function CakeFallback({ name }) {
         </div>
       </div>
       <p className="font-body text-purple-300/80 text-xs text-center">
-        Couldn't load {name}'s photo
+        {name ? `Couldn't load ${name}'s photo` : "Couldn't load photo"}
       </p>
       <p className="text-lg">🎈</p>
     </div>
@@ -60,7 +60,7 @@ function CakeFallback({ name }) {
 }
 
 // ─── PhotoCard ────────────────────────────────────────────────────────────────
-export default function PhotoCard({ photo, isLiked, onToggleLike, onLikeEvent, onImageLoad, index }) {
+export default function PhotoCard({ photo, isLiked, onToggleLike, onLikeEvent, onImageLoad, onDeleteEvent, index }) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError]   = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -106,6 +106,13 @@ export default function PhotoCard({ photo, isLiked, onToggleLike, onLikeEvent, o
       navigator.clipboard.writeText(`Happy Birthday ${photo.name}! "${photo.wish}"`).catch(() => {});
       setShowShareToast(true);
       setTimeout(() => setShowShareToast(false), 2500);
+    }
+  };
+
+  const handleDelete = (e) => {
+    e.stopPropagation();
+    if (window.confirm("Are you sure you want to permanently delete this photo?")) {
+      onDeleteEvent?.(photo.id);
     }
   };
 
@@ -212,6 +219,16 @@ export default function PhotoCard({ photo, isLiked, onToggleLike, onLikeEvent, o
                   aria-label={isLiked ? "Unlike" : "Like"}
                 >
                   <Heart size={18} className={`transition-all duration-300 ${isLiked ? "fill-white text-white" : "text-white"}`} />
+                </motion.button>
+
+                <motion.button
+                  onClick={handleDelete}
+                  whileHover={{ scale: 1.15 }}
+                  whileTap={{ scale: 0.85 }}
+                  className="w-11 h-11 rounded-full flex items-center justify-center bg-black/40 border border-white/20 backdrop-blur-sm hover:bg-red-500/80 transition-all duration-300 cursor-pointer"
+                  aria-label="Delete"
+                >
+                  <Trash2 size={16} className="text-white" />
                 </motion.button>
               </div>
 
@@ -390,6 +407,16 @@ export default function PhotoCard({ photo, isLiked, onToggleLike, onLikeEvent, o
                       aria-label="Share"
                     >
                       <Share2 size={18} className="text-white" />
+                    </motion.button>
+
+                    <motion.button
+                      onClick={handleDelete}
+                      whileHover={{ scale: 1.15 }}
+                      whileTap={{ scale: 0.85 }}
+                      className="w-11 h-11 rounded-full flex items-center justify-center bg-black/40 border border-white/20 backdrop-blur-sm hover:bg-red-500/80 transition-all duration-300 cursor-pointer"
+                      aria-label="Delete"
+                    >
+                      <Trash2 size={16} className="text-white" />
                     </motion.button>
                   </div>
                 )}

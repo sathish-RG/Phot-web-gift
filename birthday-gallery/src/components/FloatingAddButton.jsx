@@ -6,56 +6,66 @@ import { tags } from "../data/photos";
 export default function FloatingAddButton({ onAddPhoto }) {
   const [isOpen, setIsOpen] = useState(false);
   const [form, setForm] = useState({ type: "wish", name: "", wish: "", tag: "Best Friend", image: "" });
-  const [preview, setPreview] = useState(null);
-  const [fileObj, setFileObj] = useState(null);
+  const [previews, setPreviews] = useState([]);
+  const [fileObjs, setFileObjs] = useState([]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name.trim()) return;
+    if (form.type === "wish" && !form.name.trim()) return;
     if (form.type === "wish" && !form.wish.trim()) return;
 
-    let imageBase64 = null;
-    if (fileObj) {
-      imageBase64 = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.readAsDataURL(fileObj);
-      });
-    }
+    const uploadItem = async (fileObj = null) => {
+      let imageBase64 = null;
+      if (fileObj) {
+        imageBase64 = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(fileObj);
+        });
+      }
 
-    const payload = {
-      type: form.type,
-      name: form.name.trim(),
-      wish: form.type === "wish" ? form.wish.trim() : "",
-      tag: form.tag,
-      imageBase64
+      const payload = {
+        type: form.type,
+        name: form.name.trim(),
+        wish: form.type === "wish" ? form.wish.trim() : "",
+        tag: form.tag,
+        imageBase64
+      };
+
+      try {
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (data.success && data.photo) {
+          onAddPhoto(data.photo);
+        }
+      } catch (error) {
+        console.error("Upload failed:", error);
+      }
     };
 
-    try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (data.success && data.photo) {
-        onAddPhoto(data.photo);
+    if (fileObjs.length > 0) {
+      for (const fileObj of fileObjs) {
+        await uploadItem(fileObj);
       }
-    } catch (error) {
-      console.error("Upload failed:", error);
+    } else {
+      await uploadItem(null);
     }
 
     setForm({ type: "wish", name: "", wish: "", tag: "Best Friend", image: "" });
-    setPreview(null);
-    setFileObj(null);
+    setPreviews([]);
+    setFileObjs([]);
     setIsOpen(false);
   };
 
   const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFileObj(file);
-      setPreview(URL.createObjectURL(file));
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      setFileObjs(files);
+      setPreviews(files.map(f => URL.createObjectURL(f)));
       setForm((f) => ({ ...f, image: "" }));
     }
   };
@@ -128,7 +138,7 @@ export default function FloatingAddButton({ onAddPhoto }) {
                 {/* Name */}
                 <div>
                   <label className="block text-xs font-body font-semibold text-purple-300 mb-1.5">
-                    Person's Name *
+                    Person's Name {form.type === "wish" ? "*" : "(optional)"}
                   </label>
                   <input
                     id="add-name-input"
@@ -136,7 +146,7 @@ export default function FloatingAddButton({ onAddPhoto }) {
                     placeholder="e.g. Sophia"
                     value={form.name}
                     onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                    required
+                    required={form.type === "wish"}
                     className="w-full bg-white/5 border border-purple-500/30 rounded-xl px-3 py-2.5 text-sm font-body text-white placeholder-purple-400/40 focus:outline-none focus:border-purple-400/60 transition-colors"
                   />
                 </div>
@@ -188,20 +198,26 @@ export default function FloatingAddButton({ onAddPhoto }) {
                       id="add-image-input"
                       type="file"
                       accept="image/*"
+                      multiple
                       onChange={handleFileChange}
                       className="hidden"
                     />
                     <div className="flex flex-col items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
                       <Camera size={20} />
-                      <span className="text-xs">Tap to choose a local file</span>
+                      <span className="text-xs">Tap to choose images (multiple allowed)</span>
                     </div>
                   </label>
-                  {preview && (
-                    <img
-                      src={preview}
-                      alt="Preview"
-                      className="mt-2 w-full h-20 object-cover rounded-lg border border-purple-500/30"
-                    />
+                  {previews.length > 0 && (
+                    <div className="mt-2 flex gap-2 overflow-x-auto scrollbar-hide py-1">
+                      {previews.map((p, i) => (
+                        <img
+                          key={i}
+                          src={p}
+                          alt="Preview"
+                          className="w-20 h-20 shrink-0 object-cover rounded-lg border border-purple-500/30"
+                        />
+                      ))}
+                    </div>
                   )}
                 </div>
 

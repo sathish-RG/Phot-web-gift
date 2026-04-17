@@ -10,6 +10,18 @@ function localUploadsPlugin() {
     name: 'local-uploads-plugin',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
+        // Bypass Vite watcher delay by manually resolving newly uploaded images
+        if (req.url.startsWith('/uploads/') && req.method === 'GET') {
+          const filePath = path.resolve(__dirname, 'public', req.url.split('?')[0].slice(1));
+          if (fs.existsSync(filePath)) {
+            const ext = path.extname(filePath).toLowerCase();
+            const mimeTypes = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.gif': 'image/gif', '.webp': 'image/webp', '.avif': 'image/avif' };
+            res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');
+            res.setHeader('Cache-Control', 'no-cache');
+            return res.end(fs.readFileSync(filePath));
+          }
+        }
+
         if (req.url === '/api/upload' && req.method === 'POST') {
           let body = '';
           req.on('data', chunk => { body += chunk; });
@@ -56,6 +68,63 @@ function localUploadsPlugin() {
               res.end(JSON.stringify({ success: true, photo: parsedNewObj }));
             } catch (err) {
               console.error('Upload Error:', err);
+              res.statusCode = 500;
+              res.end(JSON.stringify({ error: err.message }));
+            }
+          });
+        } else if (req.url === '/api/delete' && req.method === 'POST') {
+          let body = '';
+          req.on('data', chunk => { body += chunk; });
+          req.on('end', () => {
+            try {
+              const { id } = JSON.parse(body);
+              const photosFile = path.resolve(__dirname, 'src/data/photos.js');
+              let content = fs.readFileSync(photosFile, 'utf-8');
+              
+              const regex = new RegExp(`{\\s*id:\\s*${id}.*?image:\\s*"([^"]+)".*?},?`, 'g');
+              const match = regex.exec(content);
+              
+              if (match) {
+                const imagePath = match[1];
+                if (imagePath.startsWith('/uploads/')) {
+                  const physicalPath = path.resolve(__dirname, 'public', imagePath.slice(1));
+                  if (fs.existsSync(physicalPath)) {
+                    fs.unlinkSync(physicalPath);
+                  }
+                }
+              }
+              
+              content = content.replace(regex, '');
+              fs.writeFileSync(photosFile, content);
+
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ success: true }));
+            } catch (err) {
+              console.error('Delete Error:', err);
+              res.statusCode = 500;
+              res.end(JSON.stringify({ error: err.message }));
+            }
+          });
+        } else if (req.url === '/api/reorder' && req.method === 'POST') {
+          let body = '';
+          req.on('data', chunk => { body += chunk; });
+          req.on('end', () => {
+            try {
+              const { newOrder } = JSON.parse(body);
+              const photosFile = path.resolve(__dirname, 'src/data/photos.js');
+              
+              const strObj = newOrder.map(p => 
+                `  { id: ${p.id}, name: ${JSON.stringify(p.name)}, type: ${JSON.stringify(p.type)}, wish: ${JSON.stringify(p.wish)}, tag: ${JSON.stringify(p.tag)}, mystery: ${Boolean(p.mystery)}, image: ${JSON.stringify(p.image)}, color: ${JSON.stringify(p.color)} }`
+              ).join(',\n');
+              
+              const content = `export const photos = [\n${strObj}\n];\n\nexport const tags = ["All", "Best Friend", "Family", "Colleague"];\n`;
+              
+              fs.writeFileSync(photosFile, content);
+
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ success: true }));
+            } catch (err) {
+              console.error('Reorder Error:', err);
               res.statusCode = 500;
               res.end(JSON.stringify({ error: err.message }));
             }
