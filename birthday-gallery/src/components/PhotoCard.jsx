@@ -278,7 +278,7 @@ export default function PhotoCard({ photo, isLiked, onToggleLike, onLikeEvent, o
                 src={photo.image}
                 alt={photo.name}
                 className="max-w-full max-h-[85dvh] object-contain rounded-xl shadow-2xl relative z-50"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => { e.stopPropagation(); setIsZoomed(false); }}
               />
             </motion.div>
           )}
