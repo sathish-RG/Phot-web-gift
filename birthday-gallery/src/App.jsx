@@ -171,13 +171,14 @@ export default function App() {
       {!isProd && <FloatingAddButton onAddPhoto={handleAddPhoto} />}
 
       {/* Footer */}
-      <footer className="relative z-10 text-center py-8 border-t border-purple-500/10">
+      <footer className="relative z-10 text-center py-10 border-t border-purple-500/10">
         <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          className="font-body text-purple-400/50 text-sm"
+          className="font-body text-purple-400/50 text-sm leading-relaxed"
         >
-          Made with ❤️ & 🎂 — Birthday Wishes Gallery
+          Made with ❤️ & 🎂 for Antoprakash.A<br />
+          Presented by A. Sivasangari & G. Nikhila | 20/04/2026
         </motion.p>
       </footer>
     </div>

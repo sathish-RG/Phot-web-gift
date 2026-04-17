@@ -32,7 +32,7 @@ function SparkleStar({ delay, left, top }) {
 }
 
 export default function HeroSection({ totalPhotos, filteredCount }) {
-  const typedText = useTypewriter("Happy Birthday!", 100);
+  const typedText = useTypewriter("Happy Birthday Antoprakash.A!", 100);
 
   const balloons = useMemo(() => [
     { emoji: "🎈", left: 15, delay: 0, duration: 3.2 },
@@ -102,11 +102,19 @@ export default function HeroSection({ totalPhotos, filteredCount }) {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.4 }}
-          className="font-body text-purple-200/80 max-w-xl mx-auto leading-relaxed mb-8 break-words"
+          className="font-body text-purple-200/80 max-w-xl mx-auto leading-relaxed mb-2 break-words"
           style={{ fontSize: "clamp(0.85rem, 3vw, 1.1rem)" }}
         >
-          A heartfelt collection of birthday wishes, memories, and love for the
-          special people in your life. ❤️
+          A heartfelt collection of birthday wishes, memories, and love for <span className="font-bold text-pink-300">Antoprakash.A</span>! ❤️
+        </motion.p>
+
+        <motion.p
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.45 }}
+          className="font-body text-purple-300/60 max-w-xl mx-auto text-sm mb-8 font-semibold tracking-wide"
+        >
+          Presented by A. Sivasangari & G. Nikhila • 20/04/2026
         </motion.p>
 
         {/* Stats row */}
