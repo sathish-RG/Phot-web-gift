@@ -66,6 +66,7 @@ export default function PhotoCard({ photo, isLiked, onToggleLike, onLikeEvent, o
   const [isFlipped, setIsFlipped] = useState(false);
   const [isZoomed, setIsZoomed]   = useState(false);
   const [showShareToast, setShowShareToast] = useState(false);
+  const isProd = import.meta.env.PROD;
   
   // Game state for mystery logic
   const { points, unlockedCards, unlockCard } = useGameStore();
@@ -221,15 +222,17 @@ export default function PhotoCard({ photo, isLiked, onToggleLike, onLikeEvent, o
                   <Heart size={18} className={`transition-all duration-300 ${isLiked ? "fill-white text-white" : "text-white"}`} />
                 </motion.button>
 
-                <motion.button
-                  onClick={handleDelete}
-                  whileHover={{ scale: 1.15 }}
-                  whileTap={{ scale: 0.85 }}
-                  className="w-11 h-11 rounded-full flex items-center justify-center bg-black/40 border border-white/20 backdrop-blur-sm hover:bg-red-500/80 transition-all duration-300 cursor-pointer"
-                  aria-label="Delete"
-                >
-                  <Trash2 size={16} className="text-white" />
-                </motion.button>
+                {!isProd && (
+                  <motion.button
+                    onClick={handleDelete}
+                    whileHover={{ scale: 1.15 }}
+                    whileTap={{ scale: 0.85 }}
+                    className="w-11 h-11 rounded-full flex items-center justify-center bg-black/40 border border-white/20 backdrop-blur-sm hover:bg-red-500/80 transition-all duration-300 cursor-pointer"
+                    aria-label="Delete"
+                  >
+                    <Trash2 size={16} className="text-white" />
+                  </motion.button>
+                )}
               </div>
 
               <div className="absolute bottom-2 left-2 right-2 z-[20] flex items-center justify-between pointer-events-none gap-2">
@@ -409,15 +412,17 @@ export default function PhotoCard({ photo, isLiked, onToggleLike, onLikeEvent, o
                       <Share2 size={18} className="text-white" />
                     </motion.button>
 
-                    <motion.button
-                      onClick={handleDelete}
-                      whileHover={{ scale: 1.15 }}
-                      whileTap={{ scale: 0.85 }}
-                      className="w-11 h-11 rounded-full flex items-center justify-center bg-black/40 border border-white/20 backdrop-blur-sm hover:bg-red-500/80 transition-all duration-300 cursor-pointer"
-                      aria-label="Delete"
-                    >
-                      <Trash2 size={16} className="text-white" />
-                    </motion.button>
+                    {!isProd && (
+                      <motion.button
+                        onClick={handleDelete}
+                        whileHover={{ scale: 1.15 }}
+                        whileTap={{ scale: 0.85 }}
+                        className="w-11 h-11 rounded-full flex items-center justify-center bg-black/40 border border-white/20 backdrop-blur-sm hover:bg-red-500/80 transition-all duration-300 cursor-pointer"
+                        aria-label="Delete"
+                      >
+                        <Trash2 size={16} className="text-white" />
+                      </motion.button>
+                    )}
                   </div>
                 )}
 

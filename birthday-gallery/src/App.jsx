@@ -23,6 +23,7 @@ export default function App() {
   const [photos, setPhotos] = useState(initialPhotos);
   const [activeTag, setActiveTag] = useState("All");
   const [popups, setPopups] = useState([]);
+  const isProd = import.meta.env.PROD;
 
   // ── LoadingBar state ──────────────────────────────────────────────────────
   // Track settled images (loaded OR errored) vs total visible cards
@@ -162,12 +163,12 @@ export default function App() {
             onDeleteEvent={handleDeletePhoto}
             onReorderEvent={handleReorderPhotos}
             onSaveOrderEvent={handleSaveOrder}
-            isDraggable={activeTag === "All"}
+            isDraggable={!isProd && activeTag === "All"}
           />
         </div>
       </main>
 
-      <FloatingAddButton onAddPhoto={handleAddPhoto} />
+      {!isProd && <FloatingAddButton onAddPhoto={handleAddPhoto} />}
 
       {/* Footer */}
       <footer className="relative z-10 text-center py-8 border-t border-purple-500/10">
