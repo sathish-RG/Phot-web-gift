@@ -265,10 +265,10 @@ export default function PhotoCard({ photo, isLiked, onToggleLike, onLikeEvent, o
               onClick={(e) => { e.stopPropagation(); setIsZoomed(false); }}
             >
               <button 
-                className="absolute top-6 right-6 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors cursor-pointer z-50"
+                className="absolute top-6 right-4 sm:top-8 sm:right-8 w-11 h-11 bg-white/20 hover:bg-white/30 border border-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-colors cursor-pointer z-[10000]"
                 onClick={(e) => { e.stopPropagation(); setIsZoomed(false); }}
               >
-                <X size={20} />
+                <X size={22} />
               </button>
               <motion.img
                 initial={{ scale: 0.8, opacity: 0 }}
@@ -277,7 +277,7 @@ export default function PhotoCard({ photo, isLiked, onToggleLike, onLikeEvent, o
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
                 src={photo.image}
                 alt={photo.name}
-                className="max-w-full max-h-[90dvh] object-contain rounded-xl shadow-2xl"
+                className="max-w-full max-h-[85dvh] object-contain rounded-xl shadow-2xl relative z-50"
                 onClick={(e) => e.stopPropagation()}
               />
             </motion.div>
