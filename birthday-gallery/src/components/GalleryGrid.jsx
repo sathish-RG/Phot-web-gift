@@ -35,7 +35,7 @@ export default function GalleryGrid({ photos, isLiked, onToggleLike, onLikeEvent
       variants={containerVariants}
       initial="hidden"
       animate="show"
-      className="grid grid-cols-2 lg:grid-cols-3 gap-3 px-3 w-full box-border"
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 px-4 sm:px-6 w-full max-w-sm md:max-w-none mx-auto box-border"
     >
       <AnimatePresence mode="popLayout">
         {photos.map((photo, index) => (

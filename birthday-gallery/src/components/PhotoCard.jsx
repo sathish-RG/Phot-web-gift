@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Share2, Quote, Lock, Unlock } from "lucide-react";
+import { Heart, Share2, Quote, Lock, Unlock, X } from "lucide-react";
 import confetti from "canvas-confetti";
 import SkeletonCard from "./SkeletonCard";
 import useInView from "../hooks/useInView";
@@ -64,6 +64,7 @@ export default function PhotoCard({ photo, isLiked, onToggleLike, onLikeEvent, o
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError]   = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isZoomed, setIsZoomed]   = useState(false);
   const [showShareToast, setShowShareToast] = useState(false);
   
   // Game state for mystery logic
@@ -139,6 +140,130 @@ export default function PhotoCard({ photo, isLiked, onToggleLike, onLikeEvent, o
       <div ref={cardRef}>
         <SkeletonCard />
       </div>
+    );
+  }
+
+  // ── Render normal static image if type is normal ──
+  if (photo.type === "normal") {
+    return (
+      <motion.article
+        ref={cardRef}
+        id={`photo-card-${photo.id}`}
+        layout
+        initial={{ opacity: 0, y: 40, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9, y: -20 }}
+        transition={{ duration: 0.4, delay: index * 0.05, ease: "easeOut" }}
+        whileHover={{ y: -6, scale: 1.015 }}
+        className="relative group w-full min-w-0 box-border cursor-pointer aspect-square rounded-2xl overflow-hidden glass-card flex flex-col"
+        style={{ 
+          boxShadow: isLiked ? `0 0 30px ${photo.color}30, 0 4px 24px rgba(0,0,0,0.4)` : "0 4px 24px rgba(0,0,0,0.4)",
+          border: isLiked ? `1px solid ${photo.color}40` : "1px solid rgba(232, 121, 249, 0.15)",
+        }}
+        onClick={() => setIsZoomed(true)}
+      >
+        <div className="relative flex-1 bg-purple-950/50 overflow-hidden">
+          <AnimatePresence>
+            {isLoading && !hasError && (
+              <motion.div key="skeleton" className="absolute inset-0 z-10" exit={{ opacity: 0, transition: { duration: 0.35 } }}>
+                <SkeletonCard />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {hasError && <CakeFallback name={photo.name} />}
+
+          {!hasError && (
+            <motion.img
+              src={photo.image}
+              alt={`Photo for ${photo.name}`}
+              loading="lazy"
+              decoding="async"
+              onLoad={handleLoad}
+              onError={handleError}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: isLoading ? 0 : 1 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="absolute inset-0 w-full h-full object-cover block transition-transform duration-500 group-hover:scale-105"
+            />
+          )}
+
+          {!isLoading && !hasError && (
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+          )}
+
+          {!isLoading && (
+            <>
+              <div className="absolute top-2 left-2 z-[20] pr-12">
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-body font-semibold ${tagStyle.bg} ${tagStyle.text} border ${tagStyle.border} backdrop-blur-sm truncate max-w-full`}>
+                  <span className="text-[10px] shrink-0">{TAG_ICONS[photo.tag]}</span>
+                  <span className="truncate">{photo.tag}</span>
+                </span>
+              </div>
+
+              <div className="absolute top-2 right-2 flex flex-col gap-1.5 z-[20]">
+                <motion.button
+                  onClick={handleLike}
+                  whileHover={{ scale: 1.15 }}
+                  whileTap={{ scale: 0.85 }}
+                  className={`w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-sm border transition-all duration-300 cursor-pointer ${
+                    isLiked ? "bg-pink-500/80 border-pink-400/50 shadow-lg shadow-pink-500/40" : "bg-black/40 border-white/20 hover:bg-pink-500/40"
+                  }`}
+                  aria-label={isLiked ? "Unlike" : "Like"}
+                >
+                  <Heart size={18} className={`transition-all duration-300 ${isLiked ? "fill-white text-white" : "text-white"}`} />
+                </motion.button>
+              </div>
+
+              <div className="absolute bottom-2 left-2 right-2 z-[20] flex items-center justify-between pointer-events-none gap-2">
+                <p className="font-display font-bold text-base sm:text-lg text-white drop-shadow-md truncate">
+                  {photo.name}
+                </p>
+              </div>
+            </>
+          )}
+          
+          {isLiked && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0.6, 1, 0.6] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="absolute inset-0 pointer-events-none"
+              style={{ boxShadow: `inset 0 0 20px ${photo.color}20` }}
+            />
+          )}
+        </div>
+
+        {/* Lightbox / Zoom Modal for Normal Card */}
+        <AnimatePresence>
+          {isZoomed && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 cursor-default"
+              onClick={(e) => { e.stopPropagation(); setIsZoomed(false); }}
+            >
+              <button 
+                className="absolute top-6 right-6 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors cursor-pointer z-50"
+                onClick={(e) => { e.stopPropagation(); setIsZoomed(false); }}
+              >
+                <X size={20} />
+              </button>
+              <motion.img
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                src={photo.image}
+                alt={photo.name}
+                className="max-w-full max-h-[90dvh] object-contain rounded-xl shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.article>
     );
   }
 

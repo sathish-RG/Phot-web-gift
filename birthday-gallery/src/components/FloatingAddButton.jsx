@@ -5,33 +5,59 @@ import { tags } from "../data/photos";
 
 export default function FloatingAddButton({ onAddPhoto }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", wish: "", tag: "Best Friend", image: "" });
+  const [form, setForm] = useState({ type: "wish", name: "", wish: "", tag: "Best Friend", image: "" });
   const [preview, setPreview] = useState(null);
+  const [fileObj, setFileObj] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.wish.trim()) return;
+    if (!form.name.trim()) return;
+    if (form.type === "wish" && !form.wish.trim()) return;
 
-    const newPhoto = {
-      id: Date.now(),
+    let imageBase64 = null;
+    if (fileObj) {
+      imageBase64 = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(fileObj);
+      });
+    }
+
+    const payload = {
+      type: form.type,
       name: form.name.trim(),
-      wish: form.wish.trim(),
+      wish: form.type === "wish" ? form.wish.trim() : "",
       tag: form.tag,
-      image: form.image.trim() || `https://picsum.photos/seed/${Date.now()}/600/700`,
-      color: "#e879f9",
+      imageBase64
     };
 
-    onAddPhoto(newPhoto);
-    setForm({ name: "", wish: "", tag: "Best Friend", image: "" });
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.success && data.photo) {
+        onAddPhoto(data.photo);
+      }
+    } catch (error) {
+      console.error("Upload failed:", error);
+    }
+
+    setForm({ type: "wish", name: "", wish: "", tag: "Best Friend", image: "" });
     setPreview(null);
+    setFileObj(null);
     setIsOpen(false);
   };
 
-  const handleImageChange = (e) => {
-    const val = e.target.value;
-    setForm((f) => ({ ...f, image: val }));
-    if (val.startsWith("http")) setPreview(val);
-    else setPreview(null);
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFileObj(file);
+      setPreview(URL.createObjectURL(file));
+      setForm((f) => ({ ...f, image: "" }));
+    }
   };
 
   return (
@@ -77,6 +103,28 @@ export default function FloatingAddButton({ onAddPhoto }) {
               </div>
 
               <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto flex-1 overscroll-contain scrollbar-hide">
+                {/* Type Selection */}
+                <div className="flex bg-black/40 p-1 rounded-xl w-full border border-purple-500/20">
+                  <button
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, type: "wish" }))}
+                    className={`flex-1 py-1.5 text-xs font-body font-semibold rounded-lg transition-colors ${
+                      form.type === "wish" ? "bg-purple-600 text-white shadow" : "text-purple-300 hover:text-white"
+                    }`}
+                  >
+                    Gamified Wish
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, type: "normal" }))}
+                    className={`flex-1 py-1.5 text-xs font-body font-semibold rounded-lg transition-colors ${
+                      form.type === "normal" ? "bg-pink-600 text-white shadow" : "text-purple-300 hover:text-white"
+                    }`}
+                  >
+                    Static Image
+                  </button>
+                </div>
+
                 {/* Name */}
                 <div>
                   <label className="block text-xs font-body font-semibold text-purple-300 mb-1.5">
@@ -93,21 +141,23 @@ export default function FloatingAddButton({ onAddPhoto }) {
                   />
                 </div>
 
-                {/* Wish */}
-                <div>
-                  <label className="block text-xs font-body font-semibold text-purple-300 mb-1.5">
-                    Birthday Wish *
-                  </label>
-                  <textarea
-                    id="add-wish-input"
-                    placeholder="Write a heartfelt message..."
-                    value={form.wish}
-                    onChange={(e) => setForm((f) => ({ ...f, wish: e.target.value }))}
-                    required
-                    rows={3}
-                    className="w-full bg-white/5 border border-purple-500/30 rounded-xl px-3 py-2.5 text-sm font-body text-white placeholder-purple-400/40 focus:outline-none focus:border-purple-400/60 transition-colors resize-none"
-                  />
-                </div>
+                {/* Wish (Only shown if type is 'wish') */}
+                {form.type === "wish" && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
+                    <label className="block text-xs font-body font-semibold text-purple-300 mb-1.5">
+                      Birthday Wish *
+                    </label>
+                    <textarea
+                      id="add-wish-input"
+                      placeholder="Write a heartfelt message..."
+                      value={form.wish}
+                      onChange={(e) => setForm((f) => ({ ...f, wish: e.target.value }))}
+                      required={form.type === "wish"}
+                      rows={3}
+                      className="w-full bg-white/5 border border-purple-500/30 rounded-xl px-3 py-2.5 text-sm font-body text-white placeholder-purple-400/40 focus:outline-none focus:border-purple-400/60 transition-colors resize-none"
+                    />
+                  </motion.div>
+                )}
 
                 {/* Tag */}
                 <div>
@@ -128,19 +178,24 @@ export default function FloatingAddButton({ onAddPhoto }) {
                   </select>
                 </div>
 
-                {/* Image URL */}
+                {/* Image Upload */}
                 <div>
                   <label className="block text-xs font-body font-semibold text-purple-300 mb-1.5">
-                    Image URL (optional)
+                    Upload Image
                   </label>
-                  <input
-                    id="add-image-input"
-                    type="url"
-                    placeholder="https://... (or auto-generated)"
-                    value={form.image}
-                    onChange={handleImageChange}
-                    className="w-full bg-white/5 border border-purple-500/30 rounded-xl px-3 py-2.5 text-sm font-body text-white placeholder-purple-400/40 focus:outline-none focus:border-purple-400/60 transition-colors"
-                  />
+                  <label className="flex items-center justify-center w-full bg-white/5 border border-dashed border-purple-500/50 rounded-xl px-3 py-4 text-sm font-body text-purple-300 hover:bg-white/10 transition-colors cursor-pointer group">
+                    <input
+                      id="add-image-input"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    <div className="flex flex-col items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
+                      <Camera size={20} />
+                      <span className="text-xs">Tap to choose a local file</span>
+                    </div>
+                  </label>
                   {preview && (
                     <img
                       src={preview}
@@ -158,7 +213,7 @@ export default function FloatingAddButton({ onAddPhoto }) {
                   className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-body font-bold text-sm py-3 rounded-xl shadow-lg shadow-purple-900/50 transition-all cursor-pointer"
                 >
                   <Send size={15} />
-                  Add Wish 🎉
+                  {form.type === "wish" ? "Add Wish 🎉" : "Add Image 📸"}
                 </motion.button>
               </form>
             </div>
