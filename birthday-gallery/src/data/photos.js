@@ -1,4 +1,5 @@
 export const photos = [
+  { id: 1776448516354, name: "Best Friends", type: "wish", wish: "Many more happy returns of the day!\nMay all your dreams come true.\n\n                                  - Nikhila & Sivasangari", tag: "Best Friend", mystery: false, image: "/uploads/img_1776448516354.jpg", color: "#e879f9" },
   { id: 1776445459244, name: "", type: "normal", wish: "", tag: "Best Friend", mystery: false, image: "/uploads/img_1776445459243.jpg", color: "#e879f9" },
   { id: 1776445458370, name: "", type: "normal", wish: "", tag: "Best Friend", mystery: false, image: "/uploads/img_1776445458370.jpg", color: "#e879f9" },
   { id: 1776445457490, name: "", type: "normal", wish: "", tag: "Best Friend", mystery: false, image: "/uploads/img_1776445457489.jpg", color: "#e879f9" },
