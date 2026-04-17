@@ -264,7 +264,7 @@ export default function PhotoCard({ photo, isLiked, onToggleLike, onLikeEvent, o
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 cursor-default"
+                className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 backdrop-blur-md p-4 cursor-default"
                 onClick={(e) => { e.stopPropagation(); setIsZoomed(false); }}
               >
                 <button 
