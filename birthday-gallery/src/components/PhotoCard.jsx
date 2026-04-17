@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Share2, Quote, Lock, Unlock, X, Trash2 } from "lucide-react";
 import confetti from "canvas-confetti";
@@ -255,34 +256,38 @@ export default function PhotoCard({ photo, isLiked, onToggleLike, onLikeEvent, o
         </div>
 
         {/* Lightbox / Zoom Modal for Normal Card */}
-        <AnimatePresence>
-          {isZoomed && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 cursor-default"
-              onClick={(e) => { e.stopPropagation(); setIsZoomed(false); }}
-            >
-              <button 
-                className="absolute top-6 right-4 sm:top-8 sm:right-8 w-11 h-11 bg-white/20 hover:bg-white/30 border border-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-colors cursor-pointer z-[10000]"
+        {typeof document !== 'undefined' && createPortal(
+          <AnimatePresence>
+            {isZoomed && (
+              <motion.div
+                key={`zoom-modal-${photo.id}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 cursor-default"
                 onClick={(e) => { e.stopPropagation(); setIsZoomed(false); }}
               >
-                <X size={22} />
-              </button>
-              <motion.img
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                src={photo.image}
-                alt={photo.name}
-                className="max-w-full max-h-[85dvh] object-contain rounded-xl shadow-2xl relative z-50"
-                onClick={(e) => { e.stopPropagation(); setIsZoomed(false); }}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
+                <button 
+                  className="absolute top-4 right-4 sm:top-8 sm:right-8 w-11 h-11 bg-white/20 hover:bg-white/30 border border-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-colors cursor-pointer z-[10000]"
+                  onClick={(e) => { e.stopPropagation(); setIsZoomed(false); }}
+                >
+                  <X size={22} />
+                </button>
+                <motion.img
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                  transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                  src={photo.image}
+                  alt={photo.name}
+                  className="max-w-full max-h-[85dvh] object-contain rounded-xl shadow-2xl relative z-50"
+                  onClick={(e) => { e.stopPropagation(); setIsZoomed(false); }}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
       </motion.article>
     );
   }
